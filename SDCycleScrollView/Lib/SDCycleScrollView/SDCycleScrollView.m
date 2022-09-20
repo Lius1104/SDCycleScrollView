@@ -92,7 +92,7 @@ NSString * const ID = @"SDCycleScrollViewCell";
     _currentPageDotColor = [UIColor whiteColor];
     _pageDotColor = [UIColor lightGrayColor];
     _bannerImageViewContentMode = UIViewContentModeScaleToFill;
-    
+    _spacingBetweenDots = 8;
     self.backgroundColor = [UIColor lightGrayColor];
     
 }
@@ -238,6 +238,17 @@ NSString * const ID = @"SDCycleScrollViewCell";
     }
     
     [self setCustomPageControlDotImage:pageDotImage isCurrentPageDot:NO];
+}
+
+- (void)setSpacingBetweenDots:(NSInteger)spacingBetweenDots {
+    _spacingBetweenDots = spacingBetweenDots;
+    if (!self.pageControl) {
+        return;
+    }
+    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
+        TAPageControl *pageControl = (TAPageControl *)_pageControl;
+        pageControl.spacingBetweenDots = _spacingBetweenDots;
+    }
 }
 
 - (void)setCustomPageControlDotImage:(UIImage *)image isCurrentPageDot:(BOOL)isCurrentPageDot
@@ -397,6 +408,7 @@ NSString * const ID = @"SDCycleScrollViewCell";
             pageControl.dotColor = self.currentPageDotColor;
             pageControl.userInteractionEnabled = NO;
             pageControl.currentPage = indexOnPageControl;
+            pageControl.spacingBetweenDots = _spacingBetweenDots;
             [self addSubview:pageControl];
             _pageControl = pageControl;
         }

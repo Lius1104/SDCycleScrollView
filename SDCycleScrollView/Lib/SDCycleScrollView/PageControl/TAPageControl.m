@@ -130,9 +130,24 @@ static CGSize const kDefaultDotSize = {8, 8};
 }
 
 
+//- (CGSize)sizeForNumberOfPages:(NSInteger)pageCount
+//{
+//    return CGSizeMake((self.dotSize.width + self.spacingBetweenDots) * pageCount - self.spacingBetweenDots , self.dotSize.height);
+//}
+
 - (CGSize)sizeForNumberOfPages:(NSInteger)pageCount
 {
-    return CGSizeMake((self.dotSize.width + self.spacingBetweenDots) * pageCount - self.spacingBetweenDots , self.dotSize.height);
+    CGFloat normalWidth = self.dotSize.width;
+    CGFloat currentWidth = self.dotSize.width;
+    CGFloat height = self.dotSize.height;
+    if (_dotImage) {
+        normalWidth = _dotImage.size.width;
+    }
+    if (_currentDotImage) {
+        currentWidth = _currentDotImage.size.width;
+        height = _currentDotImage.size.height;
+    }
+    return CGSizeMake((normalWidth + self.spacingBetweenDots) * pageCount - self.spacingBetweenDots + currentWidth, height);
 }
 
 
@@ -191,15 +206,34 @@ static CGSize const kDefaultDotSize = {8, 8};
  *  @param dot   Dot view
  *  @param index Page index of dot
  */
+//- (void)updateDotFrame:(UIView *)dot atIndex:(NSInteger)index
+//{
+//    // Dots are always centered within view
+//    CGFloat x = (self.dotSize.width + self.spacingBetweenDots) * index + ( (CGRectGetWidth(self.frame) - [self sizeForNumberOfPages:self.numberOfPages].width) / 2);
+//    CGFloat y = (CGRectGetHeight(self.frame) - self.dotSize.height) / 2;
+//
+//    dot.frame = CGRectMake(x, y, self.dotSize.width, self.dotSize.height);
+//}
 - (void)updateDotFrame:(UIView *)dot atIndex:(NSInteger)index
 {
     // Dots are always centered within view
     CGFloat x = (self.dotSize.width + self.spacingBetweenDots) * index + ( (CGRectGetWidth(self.frame) - [self sizeForNumberOfPages:self.numberOfPages].width) / 2);
+    
     CGFloat y = (CGRectGetHeight(self.frame) - self.dotSize.height) / 2;
     
-    dot.frame = CGRectMake(x, y, self.dotSize.width, self.dotSize.height);
+    
+    if (index > self.currentPage) {
+        x = (self.dotSize.width + self.spacingBetweenDots) * index + ( (CGRectGetWidth(self.frame) - [self sizeForNumberOfPages:self.numberOfPages].width) / 2) +self.currentDotImage.size.width - self.dotSize.width;
+    }
+    
+    if (index == self.currentPage) {
+        dot.frame = CGRectMake(x, 0, self.currentDotImage.size.width, self.currentDotImage.size.height);
+    }else{
+        dot.frame = CGRectMake(x, y, self.dotSize.width, self.dotSize.height);
+    }
+    
+    
 }
-
 
 #pragma mark - Utils
 
@@ -239,6 +273,20 @@ static CGSize const kDefaultDotSize = {8, 8};
  *  @param active Active state to apply
  *  @param index  Index of dot for state update
  */
+//- (void)changeActivity:(BOOL)active atIndex:(NSInteger)index
+//{
+//    if (self.dotViewClass) {
+//        TAAbstractDotView *abstractDotView = (TAAbstractDotView *)[self.dots objectAtIndex:index];
+//        if ([abstractDotView respondsToSelector:@selector(changeActivityState:)]) {
+//            [abstractDotView changeActivityState:active];
+//        } else {
+//            NSLog(@"Custom view : %@ must implement an 'changeActivityState' method or you can subclass %@ to help you.", self.dotViewClass, [TAAbstractDotView class]);
+//        }
+//    } else if (self.dotImage && self.currentDotImage) {
+//        UIImageView *dotView = (UIImageView *)[self.dots objectAtIndex:index];
+//        dotView.image = (active) ? self.currentDotImage : self.dotImage;
+//    }
+//}
 - (void)changeActivity:(BOOL)active atIndex:(NSInteger)index
 {
     if (self.dotViewClass) {
@@ -251,9 +299,13 @@ static CGSize const kDefaultDotSize = {8, 8};
     } else if (self.dotImage && self.currentDotImage) {
         UIImageView *dotView = (UIImageView *)[self.dots objectAtIndex:index];
         dotView.image = (active) ? self.currentDotImage : self.dotImage;
+        [self updateDotFrame:dotView atIndex:index];
+        for (int i = 0; i < self.numberOfPages; i++) {
+            UIImageView *tempDotView = (UIImageView *)[self.dots objectAtIndex:i];
+            [self updateDotFrame:tempDotView atIndex:i];
+        }
     }
 }
-
 
 - (void)resetDotViews
 {
